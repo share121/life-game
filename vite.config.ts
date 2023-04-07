@@ -81,7 +81,7 @@ export default defineConfig({
     }),
     chunkSplitPlugin({
       // 文件分割方式
-      strategy: 'all-in-one'
+      strategy: 'unbundle'
     }),
     visualizer(),
     Inspect({
@@ -110,6 +110,7 @@ export default defineConfig({
     port: 4000
   },
   build: {
+    target: 'es2015',
     rollupOptions: {
       output: {
         chunkFileNames: 'static/js/[name]-[hash].js',
