@@ -1,0 +1,1 @@
+{"resolvedId":"D:/360MoveData/Users/28546/Desktop/VSCode/ts/life/node_modules/.store/lodash-es@4.17.21/node_modules/lodash-es/date.default.js","transforms":[{"name":"vite:load-fallback","result":"import now from './now.js';\n\nexport default {\n  now\n};\n","start":1680878580804,"end":1680878581022}]}

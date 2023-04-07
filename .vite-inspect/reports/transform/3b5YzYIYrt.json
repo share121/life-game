@@ -1,0 +1,1 @@
+{"resolvedId":"D:/360MoveData/Users/28546/Desktop/VSCode/ts/life/node_modules/.store/element-plus@2.3.2/node_modules/element-plus/es/utils/typescript.mjs","transforms":[{"name":"vite:load-fallback","result":"const mutable = (val) => val;\n\nexport { mutable };\n//# sourceMappingURL=typescript.mjs.map\n","start":1680878570038,"end":1680878570689}]}

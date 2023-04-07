@@ -1,0 +1,1 @@
+{"resolvedId":"D:/360MoveData/Users/28546/Desktop/VSCode/ts/life/node_modules/.store/lodash-es@4.17.21/node_modules/lodash-es/_reEscape.js","transforms":[{"name":"vite:load-fallback","result":"/** Used to match template delimiters. */\nvar reEscape = /<%-([\\s\\S]+?)%>/g;\n\nexport default reEscape;\n","start":1680878579690,"end":1680878579773}]}
