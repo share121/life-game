@@ -1,10 +1,15 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
-const { col, row, divWidth, divHeight, updateSpeed, isStart } = storeToRefs(useConfigStore())
+import { useTempStore } from '@/stores/temp'
+
+const { col, row, divWidth, divHeight, updateSpeed, enabledTransition } = storeToRefs(
+  useConfigStore()
+)
+const { isStart } = storeToRefs(useTempStore())
 let map: Ref<boolean[][]> = ref(
   Array(row.value)
-    .fill([])
-    .map(() => Array(row.value).fill(false))
+    .fill(null)
+    .map(() => Array(col.value).fill(false))
 )
 
 // 长宽自动调整
@@ -15,13 +20,13 @@ watch(
   }),
   ({ col, row }) => {
     if (map.value.length > row) {
-      map.value.splice(row - map.value.length)
+      map.value.length = row
     } else if (map.value.length < row) {
       map.value.push(...Array(row - map.value.length).fill(Array(col).fill(false)))
     }
     map.value.forEach((e) => {
       if (e.length > col) {
-        e.splice(col - e.length)
+        e.length = col
       } else if (e.length < col) {
         e.push(...Array(col - e.length).fill(false))
       }
@@ -52,25 +57,31 @@ function getBrother<T>(arr: T[][], x: number, y: number) {
     .filter(([vx, vy]) => !(vx === 0 && vy === 0))
     .map(([vx, vy]) => get(x + vx, y + vy))
 }
-watch(isStart, function t() {
-  if (isStart.value) {
-    const newMap: boolean[][] = Array(row.value)
-      .fill([])
-      .map(() => Array(row.value).fill(false))
-    map.value.forEach((row, y) => {
-      row.forEach((val, x) => {
-        switch (getBrother(map.value, x, y).reduce((pre, cur) => pre + +(cur === true), 0)) {
-          case 2:
-            newMap[y][x] = val
-            break
-          case 3:
-            newMap[y][x] = true
-        }
+watch(isStart, () => {
+  if (!isStart.value) return
+  let preTimeStamp = performance.now()
+  requestAnimationFrame(function t(timeStamp: number) {
+    if (!isStart.value) return
+    if (timeStamp - preTimeStamp >= updateSpeed.value) {
+      preTimeStamp = timeStamp
+      const newMap: boolean[][] = Array(row.value)
+        .fill(null)
+        .map(() => Array(col.value).fill(false))
+      unref(map).forEach((row, y) => {
+        row.forEach((val, x) => {
+          switch (getBrother(unref(map), x, y).reduce((pre, cur) => pre + +(cur === true), 0)) {
+            case 2:
+              newMap[y][x] = val
+              break
+            case 3:
+              newMap[y][x] = true
+          }
+        })
       })
-    })
-    map.value = newMap
-    setTimeout(t, unref(updateSpeed))
-  }
+      map.value = newMap
+    }
+    requestAnimationFrame(t)
+  })
 })
 </script>
 
@@ -82,6 +93,7 @@ watch(isStart, function t() {
       '--width': divWidth + 'px',
       '--height': divHeight + 'px'
     }"
+    @contextmenu.prevent
   >
     <template v-for="(row, y) in map">
       <template v-for="(val, x) in row">
@@ -89,7 +101,8 @@ watch(isStart, function t() {
         <div
           :class="{ true: val }"
           @mousedown="map[y][x] = !map[y][x]"
-          @mouseover="$event.buttons === 1 && (map[y][x] = !map[y][x])"
+          @mouseover="$event.buttons !== 0 && (map[y][x] = !map[y][x])"
+          :style="enabledTransition ? {} : { transition: 'none' }"
         ></div>
       </template>
     </template>

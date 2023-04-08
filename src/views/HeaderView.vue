@@ -1,30 +1,42 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
-const { isStart } = storeToRefs(useConfigStore())
+import { useTempStore } from '@/stores/temp'
+import { Sunny, Moon } from '@element-plus/icons-vue'
+const { isStart } = storeToRefs(useTempStore())
 const dialogVisible = ref(false)
 const form = useConfigStore()
+const isS = useMediaQuery('(min-width: 400px)')
+const isM = useMediaQuery('(min-width: 660px)')
 </script>
 
 <template>
   <div class="container">
     <h1>生命游戏</h1>
     <div>
-      <el-space>
+      <el-space class="space">
         <el-button @click="isStart = !isStart">{{ isStart ? '暂停' : '开始' }}</el-button>
         <el-button @click="dialogVisible = true">设置</el-button>
-        <el-divider direction="vertical" />
-        <use-dark v-slot="{ isDark, toggleDark }">
-          <el-switch
-            :model-value="isDark"
-            active-text="暗色"
-            inactive-text="浅色"
-            @change="toggleDark()"
-          />
-        </use-dark>
+        <template v-if="isS">
+          <el-divider direction="vertical" />
+          <use-dark v-slot="{ isDark, toggleDark }">
+            <el-switch
+              :model-value="isDark"
+              inline-prompt
+              :active-icon="Moon"
+              :inactive-icon="Sunny"
+              @change="toggleDark()"
+            />
+          </use-dark>
+        </template>
       </el-space>
     </div>
-    <el-dialog v-model="dialogVisible" title="设置" :show-close="false">
-      <el-form :model="form" label-width="120px">
+    <el-dialog
+      v-model="dialogVisible"
+      title="设置"
+      :show-close="false"
+      :width="isM ? '50%' : '90%'"
+    >
+      <el-form :model="form" :label-width="isM ? '120px' : '70px'">
         <el-form-item label="列">
           <el-input-number v-model="form.col" :min="1" step-strictly :disabled="isStart" />
         </el-form-item>
@@ -55,6 +67,14 @@ const form = useConfigStore()
             </template>
           </el-popover>
         </el-form-item>
+        <el-form-item label="过渡动画">
+          <el-popover placement="right" title="过渡动画" :width="200" trigger="hover">
+            是否显示细胞出现和消失的动画
+            <template #reference>
+              <el-switch v-model="form.enabledTransition" />
+            </template>
+          </el-popover>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -75,5 +95,8 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+.space > :deep(:last-child) {
+  margin-right: 0 !important;
 }
 </style>

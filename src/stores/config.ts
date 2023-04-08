@@ -5,6 +5,10 @@ export const useConfigStore = defineStore('config', {
     divWidth: 50,
     divHeight: 50,
     updateSpeed: 500,
-    isStart: false
-  })
+    enabledTransition: true
+  }),
+  persist: {
+    enabled: true,
+    strategies: [{ storage: localStorage }]
+  }
 })

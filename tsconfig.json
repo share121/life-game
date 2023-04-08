@@ -7,7 +7,7 @@
       "@/*": ["./src/*"]
     },
     "ignoreDeprecations": "5.0",
-    "types": ["element-plus/global"]
+    "types": ["element-plus/global", "pinia-plugin-persist"]
   },
   "references": [
     {
