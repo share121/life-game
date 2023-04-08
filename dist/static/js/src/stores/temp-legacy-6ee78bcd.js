@@ -1,0 +1,1 @@
+System.register(["../../vendor-legacy-88226e72.js"],(function(t,e){"use strict";var n;return{setters:[function(t){n=t.n}],execute:function(){t("u",n("temp",{state:function(){return{isStart:!1}}}))}}}));

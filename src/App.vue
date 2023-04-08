@@ -10,13 +10,15 @@ useDark({
   valueDark: 'dark',
   valueLight: 'light'
 })
+const fullscreenEle: Ref<HTMLElement> = ref(document.documentElement)
+const { toggle } = useFullscreen(fullscreenEle)
 </script>
 
 <template>
   <el-config-provider :locale="locale">
     <el-container>
       <el-header class="header">
-        <header-view></header-view>
+        <header-view @fullscreen="toggle()"></header-view>
       </el-header>
       <el-main class="main">
         <home-view></home-view>

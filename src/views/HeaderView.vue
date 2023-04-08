@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
-import { Sunny, Moon } from '@element-plus/icons-vue'
+import { Sunny, Moon, FullScreen } from '@element-plus/icons-vue'
+defineEmits(['fullscreen'])
 const { isStart } = storeToRefs(useTempStore())
 const dialogVisible = ref(false)
 const form = useConfigStore()
-const isS = useMediaQuery('(min-width: 400px)')
+const isS = useMediaQuery('(min-width: 440px)')
 const isM = useMediaQuery('(min-width: 660px)')
+useFullscreen()
 </script>
 
 <template>
@@ -14,7 +16,8 @@ const isM = useMediaQuery('(min-width: 660px)')
     <h1>生命游戏</h1>
     <div>
       <el-space class="space">
-        <el-button @click="isStart = !isStart">{{ isStart ? '暂停' : '开始' }}</el-button>
+        <el-button @click="isStart = !isStart"> {{ isStart ? '暂停' : '开始' }}</el-button>
+        <el-button @click="$emit('fullscreen')" :icon="FullScreen" />
         <el-button @click="dialogVisible = true">设置</el-button>
         <template v-if="isS">
           <el-divider direction="vertical" />
