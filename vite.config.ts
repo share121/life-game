@@ -110,7 +110,7 @@ export default defineConfig({
     port: 4000
   },
   build: {
-    target: 'es2015',
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         chunkFileNames: 'static/js/[name]-[hash].js',

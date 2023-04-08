@@ -3,11 +3,16 @@
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "auto-imports.d.ts", "components.d.ts"],
   "compilerOptions": {
     "baseUrl": ".",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "declaration": true,
+    "strict": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"]
     },
-    "ignoreDeprecations": "5.0",
-    "types": ["element-plus/global", "pinia-plugin-persist"]
+    "ignoreDeprecations": "5.0"
   },
   "references": [
     {

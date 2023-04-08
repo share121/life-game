@@ -6,33 +6,10 @@ const { col, row, divWidth, divHeight, updateSpeed, enabledTransition } = storeT
   useConfigStore()
 )
 const { isStart } = storeToRefs(useTempStore())
-let map: Ref<boolean[][]> = ref(
-  Array(row.value)
-    .fill(null)
-    .map(() => Array(col.value).fill(false))
-)
-
-// 长宽自动调整
-watch(
-  () => ({
-    col: unref(col),
-    row: unref(row)
-  }),
-  ({ col, row }) => {
-    if (map.value.length > row) {
-      map.value.length = row
-    } else if (map.value.length < row) {
-      map.value.push(...Array(row - map.value.length).fill(Array(col).fill(false)))
-    }
-    map.value.forEach((e) => {
-      if (e.length > col) {
-        e.length = col
-      } else if (e.length < col) {
-        e.push(...Array(col - e.length).fill(false))
-      }
-    })
-  }
-)
+let map: {
+  x: number
+  y: number
+}[] = reactive([])
 function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
   if (arr.length === 1) for (const i of arr[0]) yield [i]
   else {
@@ -45,17 +22,53 @@ function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
     for (const i of arr[0].slice(1)) for (const j of tempArr) yield [i, ...j]
   }
 }
-function getBrother<T>(arr: T[][], x: number, y: number) {
+function getBrother(
+  arr: {
+    x: number
+    y: number
+  }[],
+  x: number,
+  y: number
+) {
   function get(x: number, y: number) {
-    try {
-      return unref(arr)[y][x]
-    } catch {
-      return
-    }
+    return arr.find((e) => e.x === x && e.y === y) ?? null
   }
   return [...nestArray([-1, 0, 1], [-1, 0, 1])]
     .filter(([vx, vy]) => !(vx === 0 && vy === 0))
     .map(([vx, vy]) => get(x + vx, y + vy))
+}
+function getBrotherPo(
+  arr: {
+    x: number
+    y: number
+  }[],
+  x: number,
+  y: number
+) {
+  return [...nestArray([-1, 0, 1], [-1, 0, 1])]
+    .filter(([vx, vy]) => !(vx === 0 && vy === 0))
+    .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
+}
+function getXY(x: number, y: number) {
+  return map.find((e) => e.x === x && e.y === y)
+}
+function findXY(x: number, y: number) {
+  return map.findIndex((e) => e.x === x && e.y === y)
+}
+function setXY(x: number, y: number, val: boolean = !getXY(x, y)) {
+  const isAlive = !!getXY(x, y)
+  if (isAlive) {
+    if (!val) {
+      map.splice(findXY(x, y), 1)
+    }
+  } else {
+    if (val) {
+      map.push({ x, y })
+    }
+  }
+}
+function uniq<T>(arr: T[]) {
+  return arr.filter((e, i, arr) => arr.findIndex((e2) => _.isEqual(e, e2)) === i)
 }
 watch(isStart, () => {
   if (!isStart.value) return
@@ -64,24 +77,52 @@ watch(isStart, () => {
     if (!isStart.value) return
     if (timeStamp - preTimeStamp >= updateSpeed.value) {
       preTimeStamp = timeStamp
-      const newMap: boolean[][] = Array(row.value)
-        .fill(null)
-        .map(() => Array(col.value).fill(false))
-      unref(map).forEach((row, y) => {
-        row.forEach((val, x) => {
-          switch (getBrother(unref(map), x, y).reduce((pre, cur) => pre + +(cur === true), 0)) {
-            case 2:
-              newMap[y][x] = val
-              break
-            case 3:
-              newMap[y][x] = true
-          }
+      let temp: {
+        x: number
+        y: number
+      }[] = []
+      let needFor: {
+        x: number
+        y: number
+      }[] = []
+      map.forEach(({ x, y }) => {
+        ;[{ x, y }, ...getBrotherPo(map, x, y)].forEach((e) => {
+          needFor.push(e)
         })
       })
-      map.value = newMap
+      uniq(needFor).forEach(({ x, y }) => {
+        let val = getXY(x, y)
+        switch (getBrother(map, x, y).reduce((pre, cur) => pre + +!!cur, 0)) {
+          case 2:
+            break
+          case 3:
+            val || temp.push({ x, y })
+            break
+          default:
+            val && temp.push({ x, y })
+        }
+      })
+      temp.forEach(({ x, y }) => {
+        setXY(x, y)
+      })
     }
     requestAnimationFrame(t)
   })
+})
+function range(start: number, end: number, step: number = 1) {
+  return Array(Number((end - start) / step))
+    .fill(start)
+    .map((e: number, i) => e + i * step)
+}
+const rRow = computed(() => {
+  let max = map.reduce((pre, cur) => (cur.y > pre ? cur.y : pre), row.value - 1) + 1
+  let min = map.reduce((pre, cur) => (cur.y < pre ? cur.y : pre), 0)
+  return range(min, max)
+})
+const rCol = computed(() => {
+  let max = map.reduce((pre, cur) => (cur.x > pre ? cur.x : pre), col.value - 1) + 1
+  let min = map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0)
+  return range(min, max)
 })
 </script>
 
@@ -89,19 +130,20 @@ watch(isStart, () => {
   <div
     class="container"
     :style="{
-      gridTemplateColumns: `repeat(${col}, auto)`,
+      gridTemplateColumns: `repeat(${rCol.length}, auto)`,
       '--width': divWidth + 'px',
       '--height': divHeight + 'px'
     }"
     @contextmenu.prevent
   >
-    <template v-for="(row, y) in map">
-      <template v-for="(val, x) in row">
-        <!-- eslint-disable-next-line vue/require-v-for-key -->
+    <template v-for="y in rRow" :key="y">
+      <template v-for="x in rCol" :key="x">
         <div
-          :class="{ true: val }"
-          @mousedown="map[y][x] = !map[y][x]"
-          @mouseover="$event.buttons !== 0 && (map[y][x] = !map[y][x])"
+          :data-x="x"
+          :data-y="y"
+          :class="{ true: getXY(x, y) }"
+          @mousedown="setXY(x, y)"
+          @mouseover="$event.buttons !== 0 && setXY(x, y)"
           :style="enabledTransition ? {} : { transition: 'none' }"
         ></div>
       </template>
@@ -128,7 +170,7 @@ watch(isStart, () => {
         background-color: var(--el-text-color-primary);
       }
     }
-    transition: all var(--el-transition-duration-fast);
+    transition: all var(--el-transition-duration);
   }
 }
 </style>
