@@ -54,19 +54,11 @@ useFullscreen()
             </template>
           </el-popover>
         </el-form-item>
-        <el-form-item label="细胞宽度">
-          <el-popover placement="right" title="细胞宽度" :width="200" trigger="hover">
+        <el-form-item label="细胞大小">
+          <el-popover placement="right" title="细胞大小" :width="200" trigger="hover">
             单位：px
             <template #reference>
-              <el-input-number v-model="form.divWidth" :min="1" step-strictly />
-            </template>
-          </el-popover>
-        </el-form-item>
-        <el-form-item label="细胞高度">
-          <el-popover placement="right" title="细胞高度" :width="200" trigger="hover">
-            单位：px
-            <template #reference>
-              <el-input-number v-model="form.divHeight" :min="1" step-strictly />
+              <el-input-number v-model="form.divSize" :min="1" step-strictly />
             </template>
           </el-popover>
         </el-form-item>

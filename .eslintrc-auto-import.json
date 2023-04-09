@@ -8,7 +8,6 @@
     "PropType": true,
     "Ref": true,
     "VNode": true,
-    "_": true,
     "acceptHMRUpdate": true,
     "asyncComputed": true,
     "autoResetRef": true,

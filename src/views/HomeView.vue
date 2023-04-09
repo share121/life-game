@@ -2,53 +2,12 @@
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
 
-const { col, row, divWidth, divHeight, updateSpeed, enabledTransition } = storeToRefs(
-  useConfigStore()
-)
+const { col, row, divSize, updateSpeed, enabledTransition } = storeToRefs(useConfigStore())
 const { isStart, isLocked } = storeToRefs(useTempStore())
 let map: {
   x: number
   y: number
 }[] = reactive([])
-function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
-  if (arr.length === 1) for (const i of arr[0]) yield [i]
-  else {
-    let tempArr: T[][] = []
-    const i = arr[0][0]
-    for (const j of nestArray(...arr.slice(1))) {
-      tempArr.push(j)
-      yield [i, ...j]
-    }
-    for (const i of arr[0].slice(1)) for (const j of tempArr) yield [i, ...j]
-  }
-}
-function getBrother(
-  arr: {
-    x: number
-    y: number
-  }[],
-  x: number,
-  y: number
-) {
-  function get(x: number, y: number) {
-    return arr.find((e) => e.x === x && e.y === y) ?? null
-  }
-  return [...nestArray([-1, 0, 1], [-1, 0, 1])]
-    .filter(([vx, vy]) => !(vx === 0 && vy === 0))
-    .map(([vx, vy]) => get(x + vx, y + vy))
-}
-function getBrotherPo(
-  arr: {
-    x: number
-    y: number
-  }[],
-  x: number,
-  y: number
-) {
-  return [...nestArray([-1, 0, 1], [-1, 0, 1])]
-    .filter(([vx, vy]) => !(vx === 0 && vy === 0))
-    .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
-}
 function getXY(x: number, y: number) {
   return map.find((e) => e.x === x && e.y === y)
 }
@@ -67,44 +26,89 @@ function setXY(x: number, y: number, val: boolean = !getXY(x, y)) {
     }
   }
 }
-function uniq<T>(arr: T[]) {
-  return arr.filter((e, i, arr) => arr.findIndex((e2) => _.isEqual(e, e2)) === i)
-}
 watch(isStart, () => {
   if (!isStart.value) return
   let preTimeStamp = performance.now()
-  requestAnimationFrame(function t(timeStamp: number) {
+  requestAnimationFrame(async function t(timeStamp: number) {
     if (!isStart.value) return
     if (timeStamp - preTimeStamp >= updateSpeed.value) {
       preTimeStamp = timeStamp
-      let temp: {
-        x: number
-        y: number
-      }[] = []
-      let needFor: {
-        x: number
-        y: number
-      }[] = []
-      map.forEach(({ x, y }) => {
-        ;[{ x, y }, ...getBrotherPo(map, x, y)].forEach((e) => {
-          needFor.push(e)
-        })
-      })
-      uniq(needFor).forEach(({ x, y }) => {
-        let val = getXY(x, y)
-        switch (getBrother(map, x, y).reduce((pre, cur) => pre + +!!cur, 0)) {
-          case 2:
-            break
-          case 3:
-            val || temp.push({ x, y })
-            break
-          default:
-            val && temp.push({ x, y })
+      const { workerFn } = useWebWorkerFn((map: string) => {
+        const map1: {
+          x: number
+          y: number
+        }[] = JSON.parse(map)
+        function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
+          if (arr.length === 1) for (const i of arr[0]) yield [i]
+          else {
+            const tempArr: T[][] = []
+            const i = arr[0][0]
+            for (const j of nestArray(...arr.slice(1))) {
+              tempArr.push(j)
+              yield [i, ...j]
+            }
+            for (const i of arr[0].slice(1)) for (const j of tempArr) yield [i, ...j]
+          }
         }
+        function getBrother(
+          arr: {
+            x: number
+            y: number
+          }[],
+          x: number,
+          y: number
+        ) {
+          function get(x: number, y: number) {
+            return arr.find((e) => e.x === x && e.y === y)
+          }
+          return getBrotherPo(x, y).map(({ x, y }) => get(x, y))
+        }
+        function getBrotherPo(x: number, y: number) {
+          return [...nestArray([-1, 0, 1], [-1, 0, 1])]
+            .filter(([vx, vy]) => !(vx === 0 && vy === 0))
+            .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
+        }
+        function getXY(x: number, y: number) {
+          return map1.find((e) => e.x === x && e.y === y)
+        }
+        function deepEqual<T>(value: T, other: T) {
+          return JSON.stringify(value) === JSON.stringify(other)
+        }
+        function uniq<T>(arr: T[]) {
+          return arr.filter((e, i, arr) => arr.findIndex((e2) => deepEqual(e, e2)) === i)
+        }
+        const temp: {
+          x: number
+          y: number
+        }[] = []
+        const needFor: {
+          x: number
+          y: number
+        }[] = []
+        map1.forEach(({ x, y }) => {
+          ;[{ x, y }, ...getBrotherPo(x, y)].forEach((e) => {
+            needFor.push(e)
+          })
+        })
+        uniq(needFor).forEach(({ x, y }) => {
+          const val = getXY(x, y)
+          switch (getBrother(map1, x, y).reduce((pre, cur) => pre + +!!cur, 0)) {
+            case 2:
+              break
+            case 3:
+              val || temp.push({ x, y })
+              break
+            default:
+              val && temp.push({ x, y })
+          }
+        })
+        return JSON.stringify(temp)
       })
-      temp.forEach(({ x, y }) => {
-        setXY(x, y)
-      })
+      JSON.parse(await workerFn(JSON.stringify(map))).forEach(
+        ({ x, y }: { x: number; y: number }) => {
+          setXY(x, y)
+        }
+      )
     }
     requestAnimationFrame(t)
   })
@@ -125,16 +129,6 @@ const rCol = computed(() => {
   return range(min, max)
 })
 
-function getDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
-  const x = a.x - b.x
-  const y = a.y - b.y
-  return Math.hypot(x, y)
-}
-function getCenter(a: { x: number; y: number }, b: { x: number; y: number }) {
-  const x = (a.x + b.x) / 2
-  const y = (a.y + b.y) / 2
-  return { x: x, y: y }
-}
 const longPress = ref(false)
 const { x, y } = useMouse({ type: 'page' })
 const { element } = useElementByPoint({ x, y })
@@ -165,9 +159,8 @@ watch(element, (element) => {
   setXY(x, y)
 })
 function FnlongPress(e: PointerEvent) {
-  if ((e.pointerType === 'mouse' && !targetChange.value) || e.pointerType !== 'mouse') {
+  if ((e.pointerType === 'mouse' && !targetChange.value) || e.pointerType !== 'mouse')
     longPress.value = true
-  }
 }
 </script>
 
@@ -176,8 +169,8 @@ function FnlongPress(e: PointerEvent) {
     class="container"
     :style="{
       gridTemplateColumns: `repeat(${rCol.length}, auto)`,
-      '--width': divWidth + 'px',
-      '--height': divHeight + 'px'
+      '--width': divSize + 'px',
+      '--height': divSize + 'px'
     }"
     @contextmenu.prevent
     v-on-long-press="FnlongPress"
