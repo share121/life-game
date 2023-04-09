@@ -26,6 +26,77 @@ function setXY(x: number, y: number, val: boolean = !getXY(x, y)) {
     }
   }
 }
+const { workerFn } = useWebWorkerFn((map: string) => {
+  const map1: {
+    x: number
+    y: number
+  }[] = JSON.parse(map)
+  function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
+    if (arr.length === 1) for (const i of arr[0]) yield [i]
+    else {
+      const tempArr: T[][] = []
+      const i = arr[0][0]
+      for (const j of nestArray(...arr.slice(1))) {
+        tempArr.push(j)
+        yield [i, ...j]
+      }
+      for (const i of arr[0].slice(1)) for (const j of tempArr) yield [i, ...j]
+    }
+  }
+  function getBrother(
+    arr: {
+      x: number
+      y: number
+    }[],
+    x: number,
+    y: number
+  ) {
+    function get(x: number, y: number) {
+      return arr.find((e) => e.x === x && e.y === y)
+    }
+    return getBrotherPo(x, y).map(({ x, y }) => get(x, y))
+  }
+  function getBrotherPo(x: number, y: number) {
+    return [...nestArray([-1, 0, 1], [-1, 0, 1])]
+      .filter(([vx, vy]) => !(vx === 0 && vy === 0))
+      .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
+  }
+  function getXY(x: number, y: number) {
+    return map1.find((e) => e.x === x && e.y === y)
+  }
+  function deepEqual<T>(value: T, other: T) {
+    return JSON.stringify(value) === JSON.stringify(other)
+  }
+  function uniq<T>(arr: T[]) {
+    return arr.filter((e, i, arr) => arr.findIndex((e2) => deepEqual(e, e2)) === i)
+  }
+  const temp: {
+    x: number
+    y: number
+  }[] = []
+  const needFor: {
+    x: number
+    y: number
+  }[] = []
+  map1.forEach(({ x, y }) => {
+    ;[{ x, y }, ...getBrotherPo(x, y)].forEach((e) => {
+      needFor.push(e)
+    })
+  })
+  uniq(needFor).forEach(({ x, y }) => {
+    const val = getXY(x, y)
+    switch (getBrother(map1, x, y).reduce((pre, cur) => pre + +!!cur, 0)) {
+      case 2:
+        break
+      case 3:
+        val || temp.push({ x, y })
+        break
+      default:
+        val && temp.push({ x, y })
+    }
+  })
+  return JSON.stringify(temp)
+})
 watch(isStart, () => {
   if (!isStart.value) return
   let preTimeStamp = performance.now()
@@ -33,77 +104,6 @@ watch(isStart, () => {
     if (!isStart.value) return
     if (timeStamp - preTimeStamp >= updateSpeed.value) {
       preTimeStamp = timeStamp
-      const { workerFn } = useWebWorkerFn((map: string) => {
-        const map1: {
-          x: number
-          y: number
-        }[] = JSON.parse(map)
-        function* nestArray<T extends any>(...arr: T[][]): IterableIterator<T[]> {
-          if (arr.length === 1) for (const i of arr[0]) yield [i]
-          else {
-            const tempArr: T[][] = []
-            const i = arr[0][0]
-            for (const j of nestArray(...arr.slice(1))) {
-              tempArr.push(j)
-              yield [i, ...j]
-            }
-            for (const i of arr[0].slice(1)) for (const j of tempArr) yield [i, ...j]
-          }
-        }
-        function getBrother(
-          arr: {
-            x: number
-            y: number
-          }[],
-          x: number,
-          y: number
-        ) {
-          function get(x: number, y: number) {
-            return arr.find((e) => e.x === x && e.y === y)
-          }
-          return getBrotherPo(x, y).map(({ x, y }) => get(x, y))
-        }
-        function getBrotherPo(x: number, y: number) {
-          return [...nestArray([-1, 0, 1], [-1, 0, 1])]
-            .filter(([vx, vy]) => !(vx === 0 && vy === 0))
-            .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
-        }
-        function getXY(x: number, y: number) {
-          return map1.find((e) => e.x === x && e.y === y)
-        }
-        function deepEqual<T>(value: T, other: T) {
-          return JSON.stringify(value) === JSON.stringify(other)
-        }
-        function uniq<T>(arr: T[]) {
-          return arr.filter((e, i, arr) => arr.findIndex((e2) => deepEqual(e, e2)) === i)
-        }
-        const temp: {
-          x: number
-          y: number
-        }[] = []
-        const needFor: {
-          x: number
-          y: number
-        }[] = []
-        map1.forEach(({ x, y }) => {
-          ;[{ x, y }, ...getBrotherPo(x, y)].forEach((e) => {
-            needFor.push(e)
-          })
-        })
-        uniq(needFor).forEach(({ x, y }) => {
-          const val = getXY(x, y)
-          switch (getBrother(map1, x, y).reduce((pre, cur) => pre + +!!cur, 0)) {
-            case 2:
-              break
-            case 3:
-              val || temp.push({ x, y })
-              break
-            default:
-              val && temp.push({ x, y })
-          }
-        })
-        return JSON.stringify(temp)
-      })
       JSON.parse(await workerFn(JSON.stringify(map))).forEach(
         ({ x, y }: { x: number; y: number }) => {
           setXY(x, y)
