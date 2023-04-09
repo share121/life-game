@@ -26,4 +26,7 @@ declare module '@vue/runtime-core' {
     RouterView: typeof import('vue-router')['RouterView']
     UseDark: typeof import('@vueuse/components')['UseDark']
   }
+  export interface ComponentCustomProperties {
+    OnLongPress: typeof import('@vueuse/components')['vOnLongPress']
+  }
 }

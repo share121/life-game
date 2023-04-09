@@ -5,7 +5,7 @@ import { useTempStore } from '@/stores/temp'
 const { col, row, divWidth, divHeight, updateSpeed, enabledTransition } = storeToRefs(
   useConfigStore()
 )
-const { isStart } = storeToRefs(useTempStore())
+const { isStart, isLocked } = storeToRefs(useTempStore())
 let map: {
   x: number
   y: number
@@ -124,6 +124,41 @@ const rCol = computed(() => {
   let min = map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0)
   return range(min, max)
 })
+
+function getDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  const x = a.x - b.x
+  const y = a.y - b.y
+  return Math.hypot(x, y)
+}
+function getCenter(a: { x: number; y: number }, b: { x: number; y: number }) {
+  const x = (a.x + b.x) / 2
+  const y = (a.y + b.y) / 2
+  return { x: x, y: y }
+}
+const longPress = ref(false)
+const { x, y } = useMouse({ type: 'page' })
+const { element } = useElementByPoint({ x, y })
+const { pressed } = useMousePressed()
+const { vibrate } = useVibrate({ pattern: [300, 100, 300] })
+watch(longPress, (longPress) => {
+  if (longPress) {
+    let x = +element.value?.dataset.x!
+    let y = +element.value?.dataset.y!
+    if (!isNaN(x) && !isNaN(y)) setXY(x, y)
+  }
+  vibrate()
+  isLocked.value = longPress
+})
+watch(pressed, (pressed) => {
+  if (!pressed) longPress.value = false
+})
+watch(element, (element) => {
+  if (!longPress.value) return
+  let x = +element?.dataset.x!
+  let y = +element?.dataset.y!
+  if (isNaN(x) || isNaN(y)) return
+  setXY(x, y)
+})
 </script>
 
 <template>
@@ -135,15 +170,19 @@ const rCol = computed(() => {
       '--height': divHeight + 'px'
     }"
     @contextmenu.prevent
+    v-on-long-press="
+      () => {
+        longPress = true
+      }
+    "
   >
     <template v-for="y in rRow" :key="y">
       <template v-for="x in rCol" :key="x">
         <div
           :data-x="x"
           :data-y="y"
+          @click="setXY(x, y)"
           :class="{ true: getXY(x, y) }"
-          @mousedown="setXY(x, y)"
-          @mouseover="$event.buttons !== 0 && setXY(x, y)"
           :style="enabledTransition ? {} : { transition: 'none' }"
         ></div>
       </template>

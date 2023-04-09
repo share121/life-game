@@ -2,6 +2,9 @@
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import HeaderView from './views/HeaderView.vue'
 import HomeView from './views/HomeView.vue'
+import { useTempStore } from '@/stores/temp'
+
+const { isLocked } = storeToRefs(useTempStore())
 const locale = zhCn
 
 useDark({
@@ -12,6 +15,8 @@ useDark({
 })
 const fullscreenEle: Ref<HTMLElement> = ref(document.documentElement)
 const { toggle } = useFullscreen(fullscreenEle)
+
+watch(isLocked, (isLocked) => {})
 </script>
 
 <template>
@@ -20,7 +25,16 @@ const { toggle } = useFullscreen(fullscreenEle)
       <el-header class="header">
         <header-view @fullscreen="toggle()"></header-view>
       </el-header>
-      <el-main class="main">
+      <el-main
+        class="main"
+        :style="
+          isLocked
+            ? {
+                overflow: 'hidden'
+              }
+            : {}
+        "
+      >
         <home-view></home-view>
       </el-main>
     </el-container>
