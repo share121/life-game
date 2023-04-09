@@ -1,0 +1,1 @@
+System.register(["../../vendor-legacy-3db0c359.js"],(function(e,t){"use strict";var n;return{setters:[function(e){n=e.p}],execute:function(){e("u",n("config",{state:function(){return{col:15,row:15,divWidth:50,divHeight:50,updateSpeed:500,enabledTransition:!0}},persist:{enabled:!0,strategies:[{storage:localStorage}]}}))}}}));

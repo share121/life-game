@@ -50,7 +50,7 @@ useFullscreen()
           <el-popover placement="right" title="迭代速度" :width="200" trigger="hover">
             每次迭代的间隔时间<br />单位：ms
             <template #reference>
-              <el-input-number v-model="form.updateSpeed" :min="1" step-strictly />
+              <el-input-number v-model="form.updateSpeed" :min="0" step-strictly />
             </template>
           </el-popover>
         </el-form-item>

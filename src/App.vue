@@ -15,8 +15,6 @@ useDark({
 })
 const fullscreenEle: Ref<HTMLElement> = ref(document.documentElement)
 const { toggle } = useFullscreen(fullscreenEle)
-
-watch(isLocked, (isLocked) => {})
 </script>
 
 <template>
@@ -25,16 +23,7 @@ watch(isLocked, (isLocked) => {})
       <el-header class="header">
         <header-view @fullscreen="toggle()"></header-view>
       </el-header>
-      <el-main
-        class="main"
-        :style="
-          isLocked
-            ? {
-                overflow: 'hidden'
-              }
-            : {}
-        "
-      >
+      <el-main class="main" :style="isLocked ? 'overflow: hidden' : ''">
         <home-view></home-view>
       </el-main>
     </el-container>

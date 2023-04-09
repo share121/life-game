@@ -1,1 +1,0 @@
-import{q as e}from"../../vendor-521a8e3c.js";const t=e("config",{state:()=>({col:15,row:15,divWidth:50,divHeight:50,updateSpeed:500,enabledTransition:!0}),persist:{enabled:!0,strategies:[{storage:localStorage}]}});export{t as u};

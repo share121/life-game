@@ -1,1 +1,0 @@
-System.register(["../../vendor-legacy-bb8e0412.js"],(function(t,e){"use strict";var n;return{setters:[function(t){n=t.q}],execute:function(){t("u",n("temp",{state:function(){return{isStart:!1,isLocked:!1}}}))}}}));

@@ -140,6 +140,7 @@ const { x, y } = useMouse({ type: 'page' })
 const { element } = useElementByPoint({ x, y })
 const { pressed } = useMousePressed()
 const { vibrate } = useVibrate({ pattern: [300, 100, 300] })
+const targetChange = ref(false)
 watch(longPress, (longPress) => {
   if (longPress) {
     let x = +element.value?.dataset.x!
@@ -150,7 +151,11 @@ watch(longPress, (longPress) => {
   isLocked.value = longPress
 })
 watch(pressed, (pressed) => {
-  if (!pressed) longPress.value = false
+  if (!pressed) targetChange.value = longPress.value = false
+})
+watch(element, () => {
+  if (!pressed.value || longPress.value) return
+  targetChange.value = true
 })
 watch(element, (element) => {
   if (!longPress.value) return
@@ -159,6 +164,11 @@ watch(element, (element) => {
   if (isNaN(x) || isNaN(y)) return
   setXY(x, y)
 })
+function FnlongPress(e: PointerEvent) {
+  if ((e.pointerType === 'mouse' && !targetChange.value) || e.pointerType !== 'mouse') {
+    longPress.value = true
+  }
+}
 </script>
 
 <template>
@@ -170,11 +180,7 @@ watch(element, (element) => {
       '--height': divHeight + 'px'
     }"
     @contextmenu.prevent
-    v-on-long-press="
-      () => {
-        longPress = true
-      }
-    "
+    v-on-long-press="FnlongPress"
   >
     <template v-for="y in rRow" :key="y">
       <template v-for="x in rCol" :key="x">
