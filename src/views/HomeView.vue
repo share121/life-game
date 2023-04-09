@@ -129,6 +129,28 @@ const rCol = computed(() => {
   return range(min, max)
 })
 
+watch(
+  () => map.reduce((pre, cur) => (cur.y < pre ? cur.y : pre), 0),
+  async (newVal, oldVal) => {
+    let main = document.querySelector('main')
+    if (!main) return
+    if (newVal !== oldVal && main.scrollTop === 0) {
+      await nextTick()
+      main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
+    }
+  }
+)
+watch(
+  () => map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0),
+  (newVal, oldVal) => {
+    let main = document.querySelector('main')
+    if (!main) return
+    if (newVal !== oldVal) {
+      main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
+    }
+  }
+)
+
 const longPress = ref(false)
 const { x, y } = useMouse({ type: 'page' })
 const { element } = useElementByPoint({ x, y })
