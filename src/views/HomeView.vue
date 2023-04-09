@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
-
 const { col, row, divSize, updateSpeed, enabledTransition } = storeToRefs(useConfigStore())
-const { isStart, isLocked } = storeToRefs(useTempStore())
+let { isStart, isLocked, isClean } = storeToRefs(useTempStore())
 let map: {
   x: number
   y: number
@@ -58,7 +57,7 @@ const { workerFn } = useWebWorkerFn((map: string) => {
   }
   function getBrotherPo(x: number, y: number) {
     return [...nestArray([-1, 0, 1], [-1, 0, 1])]
-      .filter(([vx, vy]) => !(vx === 0 && vy === 0))
+      .filter(([vx, vy]) => vx !== 0 || vy !== 0)
       .map(([vx, vy]) => ({ x: x + vx, y: y + vy }))
   }
   function getXY(x: number, y: number) {
@@ -98,25 +97,27 @@ const { workerFn } = useWebWorkerFn((map: string) => {
   return JSON.stringify(temp)
 })
 watch(isStart, () => {
-  if (!isStart.value) return
-  let preTimeStamp = performance.now()
-  requestAnimationFrame(async function t(timeStamp: number) {
-    if (!isStart.value) return
-    if (timeStamp - preTimeStamp >= updateSpeed.value) {
-      preTimeStamp = timeStamp
-      JSON.parse(await workerFn(JSON.stringify(map))).forEach(
-        ({ x, y }: { x: number; y: number }) => {
-          setXY(x, y)
+  if (isStart.value) {
+    let preTimeStamp = performance.now()
+    requestAnimationFrame(async function t(timeStamp: number) {
+      if (isStart.value) {
+        if (timeStamp - preTimeStamp >= updateSpeed.value) {
+          preTimeStamp = timeStamp
+          JSON.parse(await workerFn(JSON.stringify(map))).forEach(
+            ({ x, y }: { x: number; y: number }) => {
+              setXY(x, y)
+            }
+          )
         }
-      )
-    }
-    requestAnimationFrame(t)
-  })
+        requestAnimationFrame(t)
+      }
+    })
+  }
 })
-function range(start: number, end: number, step: number = 1) {
-  return Array(Number((end - start) / step))
+function range(start: number, end: number) {
+  return Array(end - start)
     .fill(start)
-    .map((e: number, i) => e + i * step)
+    .map((e: number, i) => e + i)
 }
 const rRow = computed(() => {
   let max = map.reduce((pre, cur) => (cur.y > pre ? cur.y : pre), row.value - 1) + 1
@@ -128,29 +129,27 @@ const rCol = computed(() => {
   let min = map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0)
   return range(min, max)
 })
-
 watch(
   () => map.reduce((pre, cur) => (cur.y < pre ? cur.y : pre), 0),
   async (newVal, oldVal) => {
     let main = document.querySelector('main')
-    if (!main) return
-    if (newVal !== oldVal && main.scrollTop === 0) {
-      await nextTick()
-      main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
-    }
+    if (main)
+      if (newVal !== oldVal && main.scrollTop === 0) {
+        await nextTick()
+        main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
+      }
   }
 )
 watch(
   () => map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0),
   (newVal, oldVal) => {
     let main = document.querySelector('main')
-    if (!main) return
-    if (newVal !== oldVal) {
-      main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
-    }
+    if (main)
+      if (newVal !== oldVal) {
+        main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
+      }
   }
 )
-
 const longPress = ref(false)
 const { x, y } = useMouse({ type: 'page' })
 const { element } = useElementByPoint({ x, y })
@@ -159,31 +158,53 @@ const { vibrate } = useVibrate({ pattern: [300, 100, 300] })
 const targetChange = ref(false)
 watch(longPress, (longPress) => {
   if (longPress) {
-    let x = +element.value?.dataset.x!
-    let y = +element.value?.dataset.y!
-    if (!isNaN(x) && !isNaN(y)) setXY(x, y)
+    if (element.value && isPoint(element.value)) {
+      let { x, y } = getPoint(element.value)!
+      setXY(x, y)
+      vibrate()
+    }
   }
-  vibrate()
   isLocked.value = longPress
 })
 watch(pressed, (pressed) => {
   if (!pressed) targetChange.value = longPress.value = false
 })
 watch(element, () => {
-  if (!pressed.value || longPress.value) return
-  targetChange.value = true
+  if (pressed.value || !longPress.value) {
+    targetChange.value = true
+  }
 })
 watch(element, (element) => {
-  if (!longPress.value) return
-  let x = +element?.dataset.x!
-  let y = +element?.dataset.y!
-  if (isNaN(x) || isNaN(y)) return
-  setXY(x, y)
+  if (longPress.value && element && isPoint(element!)) {
+    let { x, y } = getPoint(element)!
+    setXY(x, y)
+  }
 })
 function FnlongPress(e: PointerEvent) {
-  if ((e.pointerType === 'mouse' && !targetChange.value) || e.pointerType !== 'mouse')
-    longPress.value = true
+  if (!targetChange.value || e.pointerType !== 'mouse') longPress.value = true
 }
+function isPoint(el: HTMLElement) {
+  return !!(el.dataset.x && el.dataset.y)
+}
+function getPoint(el: HTMLElement) {
+  if (isPoint(el)) {
+    let x = +el.dataset.x!
+    let y = +el.dataset.y!
+    return { x, y }
+  }
+}
+function Fnclick(e: MouseEvent) {
+  if (e.target && isPoint(e.target as HTMLElement)) {
+    const { x, y } = getPoint(e.target as HTMLElement)!
+    setXY(x, y)
+  }
+}
+watch(isClean, () => {
+  if (isClean) {
+    isClean.value = false
+    map.length = 0
+  }
+})
 </script>
 
 <template>
@@ -195,6 +216,8 @@ function FnlongPress(e: PointerEvent) {
       '--height': divSize + 'px'
     }"
     @contextmenu.prevent
+    @click="Fnclick"
+    @pointerdown="longPress = targetChange = false"
     v-on-long-press="FnlongPress"
   >
     <template v-for="y in rRow" :key="y">
@@ -202,7 +225,6 @@ function FnlongPress(e: PointerEvent) {
         <div
           :data-x="x"
           :data-y="y"
-          @click="setXY(x, y)"
           :class="{ true: getXY(x, y) }"
           :style="enabledTransition ? {} : { transition: 'none' }"
         ></div>

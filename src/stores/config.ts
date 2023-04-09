@@ -3,7 +3,7 @@ export const useConfigStore = defineStore('config', {
     col: 15,
     row: 15,
     divSize: 30,
-    updateSpeed: 500,
+    updateSpeed: 300,
     enabledTransition: true
   }),
   persist: {

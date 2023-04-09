@@ -1,6 +1,7 @@
 export const useTempStore = defineStore('temp', {
   state: () => ({
     isStart: false,
-    isLocked: false
+    isLocked: false,
+    isClean: false
   })
 })
