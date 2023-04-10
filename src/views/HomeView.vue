@@ -96,10 +96,11 @@ const { workerFn } = useWebWorkerFn((map: string) => {
   })
   return JSON.stringify(temp)
 })
+let AnimationFrameID: Ref<number | null> = ref(null)
 watch(isStart, () => {
   if (isStart.value) {
     let preTimeStamp = performance.now()
-    requestAnimationFrame(async function t(timeStamp: number) {
+    AnimationFrameID.value = requestAnimationFrame(async function t(timeStamp: number) {
       if (isStart.value) {
         if (timeStamp - preTimeStamp >= updateSpeed.value) {
           preTimeStamp = timeStamp
@@ -130,7 +131,7 @@ const rCol = computed(() => {
   return range(min, max)
 })
 watch(
-  () => map.reduce((pre, cur) => (cur.y < pre ? cur.y : pre), 0),
+  () => rRow.value[0],
   async (newVal, oldVal) => {
     let main = document.querySelector('main')
     if (main)
@@ -141,7 +142,7 @@ watch(
   }
 )
 watch(
-  () => map.reduce((pre, cur) => (cur.x < pre ? cur.x : pre), 0),
+  () => rCol.value[0],
   (newVal, oldVal) => {
     let main = document.querySelector('main')
     if (main)
@@ -202,6 +203,10 @@ function Fnclick(e: MouseEvent) {
 watch(isClean, () => {
   if (isClean) {
     isClean.value = false
+    if (AnimationFrameID.value) {
+      cancelAnimationFrame(AnimationFrameID.value)
+      AnimationFrameID.value = null
+    }
     map.length = 0
   }
 })
@@ -210,7 +215,6 @@ function getDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
   const y = a.y - b.y
   return Math.hypot(x, y)
 }
-
 let point1 = { x: 0, y: 0 }
 let point2 = { x: 0, y: 0 }
 function FnzoomStart(e: TouchEvent) {
