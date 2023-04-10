@@ -246,9 +246,9 @@ function FnzoomMove(e: TouchEvent) {
     }"
     @contextmenu.prevent
     @click="Fnclick"
-    @touchstart.prevent="FnzoomStart"
-    @touchmove.prevent="FnzoomMove"
-    @touchend.prevent="isZoom = false"
+    @touchstart="FnzoomStart"
+    @touchmove="FnzoomMove"
+    @touchend="isZoom = false"
     v-on-long-press="FnlongPress"
   >
     <template v-for="y in rRow" :key="y">
