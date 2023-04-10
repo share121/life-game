@@ -2,7 +2,7 @@
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
 const { col, row, divSize, updateSpeed, enabledTransition } = storeToRefs(useConfigStore())
-let { isStart, isLocked, isClean } = storeToRefs(useTempStore())
+let { isStart, isClean } = storeToRefs(useTempStore())
 let map: {
   x: number
   y: number
@@ -165,7 +165,6 @@ watch(longPress, (longPress) => {
       vibrate()
     }
   }
-  isLocked.value = longPress
 })
 watch(pressed, () => {
   targetChange.value = longPress.value = false
@@ -225,6 +224,7 @@ function FnzoomStart(e: TouchEvent) {
 }
 function FnzoomMove(e: TouchEvent) {
   if (e.touches.length === 2) {
+    e.preventDefault()
     let nowPo1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }
     let nowPo2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
     let ratio = getDistance(nowPo1, nowPo2) - getDistance(point1, point2)
@@ -232,6 +232,8 @@ function FnzoomMove(e: TouchEvent) {
     console.log(vsize)
     divSize.value += vsize
     if (divSize.value < 1) divSize.value = 1
+  } else if (longPress.value) {
+    e.preventDefault()
   }
 }
 </script>
@@ -250,15 +252,14 @@ function FnzoomMove(e: TouchEvent) {
     @touchmove="FnzoomMove"
     @touchend="isZoom = false"
     v-on-long-press="FnlongPress"
+    :class="{
+      transition: enabledTransition,
+      zoom: isZoom
+    }"
   >
     <template v-for="y in rRow" :key="y">
       <template v-for="x in rCol" :key="x">
-        <div
-          :data-x="x"
-          :data-y="y"
-          :class="{ true: getXY(x, y) }"
-          :style="enabledTransition && !isZoom ? {} : { transition: 'none' }"
-        ></div>
+        <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
       </template>
     </template>
   </div>
@@ -283,7 +284,12 @@ function FnzoomMove(e: TouchEvent) {
         background-color: var(--el-text-color-primary);
       }
     }
+  }
+  &.transition > div {
     transition: all var(--el-transition-duration);
+  }
+  &.zoom > div {
+    transition-property: background-color;
   }
 }
 </style>

@@ -1,1 +1,0 @@
-System.register(["../../vendor-legacy-56a8d9a3.js"],(function(t,e){"use strict";var n;return{setters:[function(t){n=t.m}],execute:function(){t("u",n("temp",{state:function(){return{isStart:!1,isLocked:!1,isClean:!1}}}))}}}));

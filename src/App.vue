@@ -2,9 +2,6 @@
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import HeaderView from './views/HeaderView.vue'
 import HomeView from './views/HomeView.vue'
-import { useTempStore } from '@/stores/temp'
-
-const { isLocked } = storeToRefs(useTempStore())
 
 useDark({
   selector: 'html',
@@ -20,7 +17,7 @@ useDark({
       <el-header class="header">
         <header-view></header-view>
       </el-header>
-      <el-main class="main" :style="isLocked ? 'overflow: hidden' : ''">
+      <el-main class="main">
         <home-view></home-view>
       </el-main>
     </el-container>
