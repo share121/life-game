@@ -41,6 +41,9 @@ export default defineConfig({
         'pinia',
         {
           axios: [['default', 'axios']]
+        },
+        {
+          'lodash-es': [['default', '_']]
         }
       ],
       resolvers: [

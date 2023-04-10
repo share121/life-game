@@ -151,11 +151,12 @@ watch(
   }
 )
 const longPress = ref(false)
-const { x, y } = useMouse({ type: 'page' })
+const { x, y } = useMouse({ type: 'client' })
 const { element } = useElementByPoint({ x, y })
 const { pressed } = useMousePressed()
 const { vibrate } = useVibrate({ pattern: [300, 100, 300] })
 const targetChange = ref(false)
+const isZoom = ref(false)
 watch(longPress, (longPress) => {
   if (longPress) {
     if (element.value && isPoint(element.value)) {
@@ -166,8 +167,8 @@ watch(longPress, (longPress) => {
   }
   isLocked.value = longPress
 })
-watch(pressed, (pressed) => {
-  if (!pressed) targetChange.value = longPress.value = false
+watch(pressed, () => {
+  targetChange.value = longPress.value = false
 })
 watch(element, () => {
   if (pressed.value || !longPress.value) {
@@ -181,7 +182,7 @@ watch(element, (element) => {
   }
 })
 function FnlongPress(e: PointerEvent) {
-  if (!targetChange.value || e.pointerType !== 'mouse') longPress.value = true
+  if (!isZoom.value && (!targetChange.value || e.pointerType !== 'mouse')) longPress.value = true
 }
 function isPoint(el: HTMLElement) {
   return !!(el.dataset.x && el.dataset.y)
@@ -205,6 +206,34 @@ watch(isClean, () => {
     map.length = 0
   }
 })
+function getDistance(a: { x: number; y: number }, b: { x: number; y: number }) {
+  const x = a.x - b.x
+  const y = a.y - b.y
+  return Math.hypot(x, y)
+}
+
+let point1 = { x: 0, y: 0 }
+let point2 = { x: 0, y: 0 }
+function FnzoomStart(e: TouchEvent) {
+  if (e.touches.length === 2) {
+    isZoom.value = true
+    point1.x = e.touches[0].clientX
+    point1.y = e.touches[0].clientY
+    point2.x = e.touches[1].clientX
+    point2.y = e.touches[1].clientY
+  }
+}
+function FnzoomMove(e: TouchEvent) {
+  if (e.touches.length === 2) {
+    let nowPo1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    let nowPo2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
+    let ratio = getDistance(nowPo1, nowPo2) - getDistance(point1, point2)
+    let vsize = ratio / 200
+    console.log(vsize)
+    divSize.value += vsize
+    if (divSize.value < 1) divSize.value = 1
+  }
+}
 </script>
 
 <template>
@@ -217,7 +246,9 @@ watch(isClean, () => {
     }"
     @contextmenu.prevent
     @click="Fnclick"
-    @pointerdown="longPress = targetChange = false"
+    @touchstart.prevent="FnzoomStart"
+    @touchmove.prevent="FnzoomMove"
+    @touchend.prevent="isZoom = false"
     v-on-long-press="FnlongPress"
   >
     <template v-for="y in rRow" :key="y">
@@ -226,7 +257,7 @@ watch(isClean, () => {
           :data-x="x"
           :data-y="y"
           :class="{ true: getXY(x, y) }"
-          :style="enabledTransition ? {} : { transition: 'none' }"
+          :style="enabledTransition && !isZoom ? {} : { transition: 'none' }"
         ></div>
       </template>
     </template>

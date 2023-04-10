@@ -1,1 +1,0 @@
-import{i as r,j as s,k as t}from"../vendor-cef09ace.js";import{A as e}from"./App-421d4e59.js";import{r as o}from"./router/index-e8436add.js";const i=r(e);i.use(s().use(t)),i.use(o),i.directive("json",((r,s)=>{var t;r.setAttribute(null!=(t=s.arg)?t:"",JSON.stringify(s.value))})),i.mount("#app");

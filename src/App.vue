@@ -5,7 +5,6 @@ import HomeView from './views/HomeView.vue'
 import { useTempStore } from '@/stores/temp'
 
 const { isLocked } = storeToRefs(useTempStore())
-const locale = zhCn
 
 useDark({
   selector: 'html',
@@ -13,15 +12,13 @@ useDark({
   valueDark: 'dark',
   valueLight: 'light'
 })
-const fullscreenEle: Ref<HTMLElement> = ref(document.documentElement)
-const { toggle } = useFullscreen(fullscreenEle)
 </script>
 
 <template>
-  <el-config-provider :locale="locale">
+  <el-config-provider :locale="zhCn">
     <el-container>
       <el-header class="header">
-        <header-view @fullscreen="toggle()"></header-view>
+        <header-view></header-view>
       </el-header>
       <el-main class="main" :style="isLocked ? 'overflow: hidden' : ''">
         <home-view></home-view>

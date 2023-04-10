@@ -10,13 +10,12 @@ import {
   VideoPlay,
   VideoPause
 } from '@element-plus/icons-vue'
-defineEmits(['fullscreen'])
 const { isStart, isClean } = storeToRefs(useTempStore())
 const dialogVisible = ref(false)
 const form = useConfigStore()
 const isS = useMediaQuery('(min-width: 400px)')
 const isM = useMediaQuery('(min-width: 660px)')
-useFullscreen()
+const { toggle } = useFullscreen(ref(document.documentElement))
 </script>
 
 <template>
@@ -25,7 +24,7 @@ useFullscreen()
     <div>
       <el-space class="space">
         <el-button @click="isStart = !isStart" circle :icon="isStart ? VideoPause : VideoPlay" />
-        <el-button @click="$emit('fullscreen')" :icon="FullScreen" circle />
+        <el-button @click="toggle()" :icon="FullScreen" circle />
         <el-button @click="isClean = true" :icon="Delete" circle />
         <el-button @click="dialogVisible = true" :icon="Setting" circle />
         <template v-if="isS">
