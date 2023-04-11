@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
+import { values } from 'lodash-es'
 const { col, row, divSize, updateSpeed, enabledTransition } = storeToRefs(useConfigStore())
 let { isStart, isClean } = storeToRefs(useTempStore())
 let map: {
@@ -246,9 +247,8 @@ function FnzoomMove(e: TouchEvent) {
   <div
     class="container"
     :style="{
-      gridTemplateColumns: `repeat(${rCol.length}, auto)`,
-      '--width': divSize + 'px',
-      '--height': divSize + 'px'
+      '--columns': rCol.length,
+      '--size': divSize + 'px'
     }"
     @contextmenu.prevent
     @click="Fnclick"
@@ -272,14 +272,15 @@ function FnzoomMove(e: TouchEvent) {
 <style lang="less" scoped>
 .container {
   display: grid;
+  grid-template-columns: repeat(var(--columns), auto);
   place-content: center;
   gap: 8px;
   min-height: 100%;
   min-width: 100%;
   width: fit-content;
   & > div {
-    width: var(--width);
-    height: var(--height);
+    width: var(--size);
+    height: var(--size);
     border-radius: 8px;
     background-color: var(--el-fill-color);
     &.true {
