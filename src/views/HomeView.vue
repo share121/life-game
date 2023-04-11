@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { useConfigStore } from '@/stores/config'
 import { useTempStore } from '@/stores/temp'
-import { values } from 'lodash-es'
 const { col, row, divSize, updateSpeed, enabledTransition } = storeToRefs(useConfigStore())
 let { isStart, isClean } = storeToRefs(useTempStore())
 let map: {
