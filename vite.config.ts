@@ -110,6 +110,7 @@ export default defineConfig({
     port: 4000
   },
   build: {
+    outDir: './docs',
     assetsInlineLimit: 0,
     rollupOptions: {
       output: {
