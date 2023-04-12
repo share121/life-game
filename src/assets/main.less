@@ -4,6 +4,12 @@
   height: 100%;
   & > .el-container {
     height: 100%;
+    header {
+      -webkit-app-region: drag;
+      & > * > * {
+        -webkit-app-region: no-drag;
+      }
+    }
   }
 }
 

@@ -3,6 +3,9 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+// PWA
+// import { VitePWA } from 'vite-plugin-pwa'
+
 // 自动导入
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
