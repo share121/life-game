@@ -140,15 +140,18 @@ watch(
     let main = document.querySelector('main')
     if (main) {
       await nextTick()
-      main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
+      if (main.scrollTop === 0) main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
     }
   }
 )
 watch(
   () => rCol.value[0],
-  (newVal, oldVal) => {
+  async (newVal, oldVal) => {
     let main = document.querySelector('main')
-    if (main) main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
+    if (main) {
+      // await nextTick()
+      main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
+    }
   }
 )
 const longPress = ref(false)
@@ -257,8 +260,8 @@ function FnzoomMove(e: TouchEvent) {
       zoom: isZoom
     }"
   >
-    <template v-for="y in rRow">
-      <template v-for="x in rCol">
+    <template v-for="y in rRow" :key="y">
+      <template v-for="x in rCol" :key="x">
         <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
       </template>
     </template>
