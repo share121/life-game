@@ -134,21 +134,17 @@ watch(
   () => rRow.value[0],
   async (newVal, oldVal) => {
     let main = document.querySelector('main')
-    if (main)
-      if (newVal !== oldVal && main.scrollTop === 0) {
-        await nextTick()
-        main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
-      }
+    if (main) {
+      await nextTick()
+      main.scrollTop += (divSize.value + 8) * (oldVal - newVal)
+    }
   }
 )
 watch(
   () => rCol.value[0],
   (newVal, oldVal) => {
     let main = document.querySelector('main')
-    if (main)
-      if (newVal !== oldVal) {
-        main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
-      }
+    if (main) main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
   }
 )
 const longPress = ref(false)
@@ -220,10 +216,8 @@ let point2 = { x: 0, y: 0 }
 function FnzoomStart(e: TouchEvent) {
   if (e.touches.length === 2) {
     isZoom.value = true
-    point1.x = e.touches[0].clientX
-    point1.y = e.touches[0].clientY
-    point2.x = e.touches[1].clientX
-    point2.y = e.touches[1].clientY
+    point1 = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    point2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
   }
 }
 function FnzoomMove(e: TouchEvent) {
@@ -233,7 +227,6 @@ function FnzoomMove(e: TouchEvent) {
     let nowPo2 = { x: e.touches[1].clientX, y: e.touches[1].clientY }
     let ratio = getDistance(nowPo1, nowPo2) - getDistance(point1, point2)
     let vsize = ratio / 200
-    console.log(vsize)
     divSize.value += vsize
     if (divSize.value < 1) divSize.value = 1
   } else if (longPress.value) {
