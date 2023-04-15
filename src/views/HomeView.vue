@@ -98,6 +98,10 @@ const { workerFn } = useWebWorkerFn((map: string) => {
 })
 let AnimationFrameID: Ref<number | null> = ref(null)
 watch(isStart, () => {
+  if (AnimationFrameID.value) {
+    cancelAnimationFrame(AnimationFrameID.value)
+    AnimationFrameID.value = null
+  }
   if (isStart.value) {
     let preTimeStamp = performance.now()
     AnimationFrameID.value = requestAnimationFrame(async function t(timeStamp: number) {
@@ -110,7 +114,7 @@ watch(isStart, () => {
             }
           )
         }
-        requestAnimationFrame(t)
+        AnimationFrameID.value = requestAnimationFrame(t)
       }
     })
   }
@@ -253,8 +257,8 @@ function FnzoomMove(e: TouchEvent) {
       zoom: isZoom
     }"
   >
-    <template v-for="y in rRow" :key="y">
-      <template v-for="x in rCol" :key="x">
+    <template v-for="y in rRow">
+      <template v-for="x in rCol">
         <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
       </template>
     </template>

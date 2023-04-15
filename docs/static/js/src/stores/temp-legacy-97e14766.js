@@ -1,1 +1,0 @@
-System.register(["../../vendor-legacy-567df3ff.js"],(function(t,e){"use strict";var n;return{setters:[function(t){n=t.m}],execute:function(){t("u",n("temp",{state:function(){return{isStart:!1,isClean:!1}}}))}}}));

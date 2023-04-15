@@ -1,0 +1,1 @@
+import{m as e}from"../../vendor-d428b540.js";const o=e("config",{state:()=>({col:15,row:15,divSize:30,updateSpeed:300,enabledTransition:!0}),persist:{enabled:!0,strategies:[{storage:localStorage}]}});export{o as u};
