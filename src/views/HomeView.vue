@@ -149,7 +149,6 @@ watch(
   async (newVal, oldVal) => {
     let main = document.querySelector('main')
     if (main) {
-      // await nextTick()
       main.scrollLeft += (divSize.value + 8) * (oldVal - newVal)
     }
   }
@@ -260,9 +259,18 @@ function FnzoomMove(e: TouchEvent) {
       zoom: isZoom
     }"
   >
-    <template v-for="y in rRow" :key="y">
-      <template v-for="x in rCol" :key="x">
-        <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
+    <template v-if="enabledTransition">
+      <template v-for="y in rRow" :key="y">
+        <template v-for="x in rCol" :key="x">
+          <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
+        </template>
+      </template>
+    </template>
+    <template v-else>
+      <template v-for="y in rRow">
+        <template v-for="x in rCol">
+          <div :data-x="x" :data-y="y" :class="{ true: getXY(x, y) }"></div>
+        </template>
       </template>
     </template>
   </div>
